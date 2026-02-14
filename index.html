@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>ValueGov-CAMA — System Architecture + IPO Framework</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:#0f1a33;
+      --panel2:#0c1630;
+      --text:#eaf0ff;
+      --muted:#a9b8e6;
+      --line:rgba(255,255,255,.10);
+      --chip:rgba(255,255,255,.08);
+      --good:#2ee59d;
+      --warn:#ffd166;
+      --accent:#7aa8ff;
+      --accent2:#b07cff;
+      --shadow:0 18px 60px rgba(0,0,0,.45);
+      --radius:18px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: radial-gradient(1200px 700px at 20% 10%, rgba(122,168,255,.18), transparent 55%),
+                  radial-gradient(900px 650px at 90% 10%, rgba(176,124,255,.18), transparent 55%),
+                  linear-gradient(180deg, #070b16, var(--bg));
+      color: var(--text);
+    }
+
+    .wrap{
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 28px 18px 60px;
+    }
+
+    header{
+      display:flex;
+      flex-wrap:wrap;
+      gap:14px;
+      align-items:flex-end;
+      justify-content:space-between;
+      margin-bottom: 18px;
+    }
+    .title{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    h1{
+      margin:0;
+      font-size: clamp(20px, 2.2vw, 30px);
+      letter-spacing:.2px;
+    }
+    .subtitle{
+      margin:0;
+      color: var(--muted);
+      max-width: 80ch;
+      line-height:1.35;
+      font-size: 14px;
+    }
+
+    .controls{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .btn{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius: 12px;
+      cursor:pointer;
+      transition:.15s ease;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      user-select:none;
+    }
+    .btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,.09); }
+    .btn:active{ transform: translateY(0px); }
+
+    .legend{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin: 14px 0 18px;
+    }
+    .chip{
+      font-size:12px;
+      padding:7px 10px;
+      border-radius:999px;
+      background: var(--chip);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .dot{
+      width:10px; height:10px; border-radius:999px;
+      display:inline-block;
+      background: var(--accent);
+      box-shadow: 0 0 0 3px rgba(122,168,255,.12);
+    }
+    .dot.good{ background: var(--good); box-shadow: 0 0 0 3px rgba(46,229,157,.10); }
+    .dot.warn{ background: var(--warn); box-shadow: 0 0 0 3px rgba(255,209,102,.10); }
+    .dot.purple{ background: var(--accent2); box-shadow: 0 0 0 3px rgba(176,124,255,.12); }
+/* ---------- Swimlane Workflow Diagram ---------- */
+.swim{
+  border:1px solid var(--line);
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow:hidden;
+  margin: 14px 0 18px;
+}
+.swimHead{
+  padding:16px 16px 12px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(255,255,255,.03);
+}
+.swimHead h2{
+  margin:0;
+  font-size:16px;
+  letter-spacing:.2px;
+}
+.swimHead p{
+  margin:8px 0 0;
+  color: var(--muted);
+  font-size:13px;
+  line-height:1.35;
+  max-width: 95ch;
+}
+
+.lanes{
+  display:grid;
+  gap: 10px;
+  padding: 14px;
+}
+@media(min-width:980px){
+  .lanes{ grid-template-columns: repeat(5, 1fr); }
+}
+
+.lane{
+  border:1px solid var(--line);
+  background: rgba(10,16,34,.55);
+  border-radius: 16px;
+  overflow:hidden;
+  min-height: 180px;
+}
+.laneHead{
+  padding: 12px 12px 10px;
+  border-bottom:1px solid var(--line);
+  background: rgba(255,255,255,.03);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.laneHead h3{
+  margin:0;
+  font-size: 13px;
+  letter-spacing:.15px;
+}
+.laneHead .roleTag{
+  font-size:11px;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background: rgba(255,255,255,.05);
+  color: var(--muted);
+  white-space:nowrap;
+}
+
+.laneBody{
+  padding: 10px 12px 12px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.task{
+  border:1px solid var(--line);
+  background: rgba(255,255,255,.04);
+  border-radius: 14px;
+  padding: 10px 10px;
+  margin: 10px 0;
+}
+.task strong{ color: var(--text); display:block; margin-bottom:4px; }
+.task small{ color: rgba(233,241,255,.70); }
+
+.flowline{
+  margin: 0 14px 14px;
+  border:1px dashed rgba(255,255,255,.18);
+  background: rgba(176,124,255,.06);
+  border-radius: 16px;
+  padding: 12px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.flowline strong{ color: var(--text); }
+
+.flowSteps{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:10px;
+}
+.flowSteps span{
+  border:1px solid var(--line);
+  background: rgba(255,255,255,.05);
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:12px;
+  color: var(--muted);
+}
+
+    /* ---------- Architecture Diagram ---------- */
+    .arch{
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      margin: 14px 0 18px;
+    }
+    .archHead{
+      padding:16px 16px 12px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.03);
+    }
+    .archTitle{
+      margin:0;
+      font-size:16px;
+      letter-spacing:.2px;
+    }
+    .archDesc{
+      margin:8px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height:1.35;
+      max-width: 95ch;
+    }
+
+    .archBody{
+      padding: 14px;
+    }
+
+    .archGrid{
+      display:grid;
+      gap: 12px;
+    }
+    @media(min-width: 980px){
+      .archGrid{
+        grid-template-columns: 1fr 70px 1fr;
+        align-items: stretch;
+      }
+    }
+
+    .layerStack{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .layerBox{
+      border:1px solid var(--line);
+      background: rgba(10,16,34,.55);
+      border-radius: 16px;
+      overflow:hidden;
+    }
+    .layerBox .lh{
+      padding:12px 12px 10px;
+      border-bottom:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .layerBox .lh h3{
+      margin:0;
+      font-size: 14px;
+      letter-spacing:.15px;
+    }
+    .layerBox .lb{
+      padding: 10px 12px 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .tag{
+      font-size:11px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+      white-space:nowrap;
+    }
+
+    .midArrow{
+      display:none;
+    }
+    @media(min-width:980px){
+      .midArrow{
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        position:relative;
+      }
+      .midArrow::before{
+        content:"";
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(90deg, rgba(122,168,255,.15), rgba(122,168,255,.65), rgba(176,124,255,.35));
+        border-radius: 999px;
+      }
+      .midArrow::after{
+        content:"";
+        position:absolute;
+        right: 6px;
+        width: 0; height: 0;
+        border-left: 10px solid rgba(176,124,255,.65);
+        border-top: 7px solid transparent;
+        border-bottom: 7px solid transparent;
+        filter: drop-shadow(0 8px 16px rgba(0,0,0,.35));
+      }
+    }
+
+    .archStrip{
+      margin-top: 12px;
+      border:1px dashed rgba(255,255,255,.18);
+      background: rgba(122,168,255,.06);
+      border-radius: 16px;
+      padding: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .archStrip strong{ color: var(--text); }
+    .archStrip .mini{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:10px;
+    }
+    .mini span{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      color: var(--muted);
+    }
+
+    /* ---------- Main IPO layout ---------- */
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+    @media(min-width: 980px){
+      .grid{ grid-template-columns: 1fr 60px 1fr 60px 1fr; gap: 14px; align-items:stretch; }
+    }
+
+    .column{
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      position:relative;
+    }
+
+    .colHead{
+      padding:16px 16px 12px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.03);
+    }
+    .colTag{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      font-size:12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .colTag strong{
+      color: var(--text);
+      font-weight: 700;
+      letter-spacing:.2px;
+    }
+    .colTitle{
+      margin:0;
+      font-size: 16px;
+    }
+    .colDesc{
+      margin:8px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height:1.35;
+    }
+
+    .content{
+      padding: 14px 14px 16px;
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+    }
+
+    .card{
+      border:1px solid var(--line);
+      background: rgba(10,16,34,.55);
+      border-radius: 16px;
+      overflow:hidden;
+    }
+    .cardHead{
+      padding:12px 12px 10px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      border-bottom:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+    }
+    .cardTitle{
+      margin:0;
+      font-size: 14px;
+      letter-spacing:.15px;
+    }
+    .badge{
+      font-size:11px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+      white-space:nowrap;
+    }
+    .cardBody{
+      padding: 10px 12px 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    ul{ margin: 8px 0 0; padding-left: 18px; }
+    li{ margin: 6px 0; }
+
+    .callout{
+      margin-top:10px;
+      padding:10px 10px;
+      border-radius: 14px;
+      border:1px dashed rgba(255,255,255,.18);
+      background: rgba(122,168,255,.07);
+      color: var(--text);
+      font-size:12.5px;
+      line-height:1.35;
+    }
+
+    .arrow{ display:none; }
+    @media(min-width:980px){
+      .arrow{
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        position:relative;
+      }
+      .arrow::before{
+        content:"";
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(90deg, rgba(122,168,255,.15), rgba(122,168,255,.65), rgba(176,124,255,.35));
+        border-radius: 999px;
+      }
+      .arrow::after{
+        content:"";
+        position:absolute;
+        right: 6px;
+        width: 0; height: 0;
+        border-left: 10px solid rgba(176,124,255,.65);
+        border-top: 7px solid transparent;
+        border-bottom: 7px solid transparent;
+        filter: drop-shadow(0 8px 16px rgba(0,0,0,.35));
+      }
+    }
+
+    details{
+      border:1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.03);
+      overflow:hidden;
+    }
+    summary{
+      cursor:pointer;
+      padding: 12px 12px;
+      list-style:none;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      user-select:none;
+    }
+    summary::-webkit-details-marker{ display:none; }
+    .sumTitle{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-size: 13px;
+      color: var(--text);
+    }
+    .chev{
+      width: 10px; height: 10px;
+      border-right:2px solid rgba(255,255,255,.55);
+      border-bottom:2px solid rgba(255,255,255,.55);
+      transform: rotate(-45deg);
+      transition: .18s ease;
+      opacity:.9;
+    }
+    details[open] .chev{ transform: rotate(45deg); }
+    .detailsBody{
+      padding: 0 12px 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height:1.45;
+    }
+
+    footer{
+      margin-top: 16px;
+      color: rgba(233,241,255,.55);
+      font-size: 12px;
+      line-height:1.4;
+    }
+    code.k{
+      background: rgba(0,0,0,.25);
+      padding: 2px 6px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.08);
+      color: rgba(233,241,255,.85);
+    }
+
+    @media print{
+      .controls{ display:none !important; }
+      body{ background:#fff !important; color:#000 !important; }
+      .column, .arch, .layerBox, .card, details, .layerStack, .archStrip{
+        box-shadow:none !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">
+        <h1>ValueGov-CAMA — System Architecture + IPO Framework (One Page)</h1>
+        <p class="subtitle">
+          This page includes a <strong>System Architecture Diagram</strong> (technical layers) plus the <strong>Screenshot</strong>.
+          Use it for MACRA submission screenshots/diagrams and for implementation guidance.
+        </p>
+      </div>
+
+      <div class="controls">
+        <button class="btn" id="goScreenshots" title="Open Screenshots page">📸  For Screenshots references click here</button>
+
+      </div>
+    
+
+    </header>
+
+    <div class="legend">
+      <div class="chip"><span class="dot"></span> Actor / Layer</div>
+      <div class="chip"><span class="dot good"></span> Data Quality / Standards</div>
+      <div class="chip"><span class="dot warn"></span> Validation / Approval / Objections</div>
+      <div class="chip"><span class="dot purple"></span> Automation / Engine / Analytics</div>
+    </div>
+
+    <!-- =========================
+         SYSTEM ARCHITECTURE
+    ========================== -->
+    <section class="arch" id="architecture">
+      <div class="archHead">
+        <h2 class="archTitle">System Architecture Diagram (Technical Layers)</h2>
+        <p class="archDesc">
+          Shows how ValueGov-CAMA is built: users interact with the web UI (HTML/CSS), requests go to the Flask application,
+          valuation logic runs in the valuation engine, data is stored in PostgreSQL, and outputs are generated as reports and valuation rolls.
+        </p>
+      </div>
+
+      <div class="archBody">
+        <div class="archGrid">
+          <div class="layerStack">
+            <div class="layerBox">
+              <div class="lh">
+                <h3>Users / Roles</h3><span class="tag">Actors</span>
+              </div>
+              <div class="lb">
+                Admin • Property Inspector • Valuer • Council Official • Property Owner
+              </div>
+            </div>
+
+            <div class="layerBox">
+              <div class="lh">
+                <h3>Presentation Layer</h3><span class="tag">HTML / CSS</span>
+              </div>
+              <div class="lb">
+                Role-based dashboards • Forms • Submissions • Valuation views • Reports download
+              </div>
+            </div>
+
+            <div class="layerBox">
+              <div class="lh">
+                <h3>Application Layer</h3><span class="tag">Python Flask</span>
+              </div>
+              <div class="lb">
+                Authentication & RBAC • Task assignment (Admin → Inspector) • QA review (Approve/Reject)
+                • Workflow routing (Inspector ↔ Admin ↔ Valuer)
+              </div>
+            </div>
+          </div>
+
+          <div class="midArrow" aria-hidden="true"></div>
+
+          <div class="layerStack">
+            <div class="layerBox">
+              <div class="lh">
+                <h3>Valuation Engine</h3><span class="tag">Core Logic</span>
+              </div>
+              <div class="lb">
+                Sales Comparison (comparables + adjustments) • Income Approach (rent/cap rate)
+                • Cost Method fallback (replacement cost + depreciation) • QA checks & confidence
+              </div>
+            </div>
+
+            <div class="layerBox">
+              <div class="lh">
+                <h3>Data Layer</h3><span class="tag">PostgreSQL</span>
+              </div>
+              <div class="lb">
+                Properties • Inspection submissions • Comparable sales & rentals • Valuation results
+                • GPS coordinates • Audit logs
+              </div>
+            </div>
+
+            <div class="layerBox">
+              <div class="lh">
+                <h3>Output Layer</h3><span class="tag">Reports</span>
+              </div>
+              <div class="lb">
+                Valuation reports (export) • Valuation roll generation • Objection tracking • Council oversight dashboards
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="archStrip">
+          <strong>Cross-cutting controls (apply to all layers):</strong>
+          role-based access control, audit trail logging, secure authentication, backups & recovery, and data validation gates.
+          <div class="mini">
+            <span>RBAC</span><span>Audit Trail</span><span>GPS Data</span><span>Exports</span><span>Backups</span><span>On-Premise Prototype</span>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- =========================
+     SWIMLANE WORKFLOW VIEW
+========================== -->
+<section class="swim" id="swimlane">
+  <div class="swimHead">
+    <h2>Swimlane Workflow View (Admin | Inspector | Valuer | Council | Owner)</h2>
+    <p>
+      This view shows the end-to-end operational workflow and quality-control loop:
+      Admin assigns → Inspector captures & submits → Admin QA approves/rejects → Valuer values → Council publishes → Owner views & objects.
+    </p>
+  </div>
+
+  <div class="lanes">
+    <!-- ADMIN -->
+    <div class="lane">
+      <div class="laneHead">
+        <h3>Admin</h3>
+        <span class="roleTag">Coordinator</span>
+      </div>
+      <div class="laneBody">
+        <div class="task">
+          <strong>1. Create Assignment</strong>
+          <small>Select property type, set required attributes template, assign to inspector.</small>
+        </div>
+        <div class="task">
+          <strong>2. Maintain Comparables</strong>
+          <small>Enter verified sale/rent records used in Sales Comparison method.</small>
+        </div>
+        <div class="task">
+          <strong>3. Quality Check (QA Gate)</strong>
+          <small>Review submissions → Approve (ready for valuation) or Reject (send back).</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- INSPECTOR -->
+    <div class="lane">
+      <div class="laneHead">
+        <h3>Inspector</h3>
+        <span class="roleTag">Field Data</span>
+      </div>
+      <div class="laneBody">
+        <div class="task">
+          <strong>4. Collect Property Data</strong>
+          <small>Capture attributes, GPS coordinates, photos/documents (offline-first).</small>
+        </div>
+        <div class="task">
+          <strong>5. Submit to Admin</strong>
+          <small>Send completed assignment for QA review.</small>
+        </div>
+        <div class="task">
+          <strong>Rework if Rejected</strong>
+          <small>Receive feedback → correct data → resubmit.</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- VALUER -->
+    <div class="lane">
+      <div class="laneHead">
+        <h3>Valuer</h3>
+        <span class="roleTag">Professional</span>
+      </div>
+      <div class="laneBody">
+        <div class="task">
+          <strong>6. Review Approved Records</strong>
+          <small>Work only on Admin-approved property data to ensure quality input.</small>
+        </div>
+        <div class="task">
+          <strong>7. Run Valuation</strong>
+          <small>Apply Sales Comparison / Income / Cost fallback based on rules & data.</small>
+        </div>
+        <div class="task">
+          <strong>8. Finalize & Record</strong>
+          <small>Store valuation results, method used, and notes in the system.</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- COUNCIL -->
+    <div class="lane">
+      <div class="laneHead">
+        <h3>Council</h3>
+        <span class="roleTag">Oversight</span>
+      </div>
+      <div class="laneBody">
+        <div class="task">
+          <strong>9. Generate Valuation Roll</strong>
+          <small>Compile valuations into official roll; export reports for administration.</small>
+        </div>
+        <div class="task">
+          <strong>10. Publish & Notify</strong>
+          <small>Publish roll and communicate outcomes via system notifications.</small>
+        </div>
+        <div class="task">
+          <strong>11. Manage Objections</strong>
+          <small>Review objections; assign reassessment when necessary; update roll.</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- OWNER -->
+    <div class="lane">
+      <div class="laneHead">
+        <h3>Owner</h3>
+        <span class="roleTag">Transparency</span>
+      </div>
+      <div class="laneBody">
+        <div class="task">
+          <strong>12. View Valuation</strong>
+          <small>See value, method used, and valuation history (where enabled).</small>
+        </div>
+        <div class="task">
+          <strong>13. Submit Objection</strong>
+          <small>Submit claim with evidence (wrong attributes, clerical errors, etc.).</small>
+        </div>
+        <div class="task">
+          <strong>14. Track Outcome</strong>
+          <small>Follow objection decision and updated valuation status.</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flowline">
+    <strong>Key Loop:</strong> If Admin QA rejects a submission, it returns to the Inspector for correction and resubmission.
+    <div class="flowSteps">
+      <span>Assign</span><span>Collect</span><span>Submit</span><span>QA Approve/Reject</span><span>Value</span><span>Publish</span><span>Object</span><span>Update Roll</span>
+    </div>
+  </div>
+</section>
+
+
+    <!-- =========================
+         IPO FRAMEWORK (YOUR ORIGINAL)
+    ========================== -->
+
+    <div class="grid">
+      <!-- INPUT -->
+      <section class="column" id="col-input">
+        <div class="colHead">
+          <div class="colTag"><span class="dot good"></span><strong>INPUT MODULE</strong> Data Capture & Assignment</div>
+          <h2 class="colTitle">Collect → Verify → Prepare property data</h2>
+          <p class="colDesc">Data accuracy is critical (“garbage in, garbage out”). Offline capture and templates enforce required attributes.</p>
+        </div>
+
+        <div class="content">
+          <div class="card">
+            <div class="cardHead">
+              <h3 class="cardTitle">Admin Dashboard — Assignment Creation</h3>
+              <span class="badge">Coordinator</span>
+            </div>
+            <div class="cardBody">
+              <ul>
+                <li>Create field assignments by property type (residential / commercial / industrial / special use).</li>
+                <li>Define data templates (questionnaires) for required attributes.</li>
+                <li>Include GPS/location and owner information.</li>
+                <li>Maintain comparable database (verified sale & rental records + evidence).</li>
+                <li>Review inspector submissions: approve or reject with feedback.</li>
+              </ul>
+              <div class="callout">✅ Output of Admin: <strong>Approved property records + verified comparables</strong> ready for valuation.</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="cardHead">
+              <h3 class="cardTitle">Inspector Dashboard — Mobile App (Offline)</h3>
+              <span class="badge">Field Data</span>
+            </div>
+            <div class="cardBody">
+              <ul>
+                <li>Open assignments, fill pre-configured questionnaires by property type.</li>
+                <li>Capture GPS coordinates + attach photos/documents.</li>
+                <li>Works offline; syncs automatically when internet is available.</li>
+                <li>If rejected: receives feedback → correct → resubmit.</li>
+              </ul>
+              <div class="callout">📶 Offline-first: designed for low-connectivity areas; sync later when online.</div>
+            </div>
+          </div>
+
+          <details>
+            <summary>
+              <span class="sumTitle"><span class="dot good"></span> Standards enforced in Input Module</span>
+              <span class="chev"></span>
+            </summary>
+            <div class="detailsBody">
+              <ul>
+                <li><strong>Measurement standards:</strong> IPMS / RICS (consistent floor area: GIA, NIA).</li>
+                <li><strong>GPS precision:</strong> target accuracy below 10 meters.</li>
+                <li><strong>Evidence integrity:</strong> photos with EXIF timestamp & geolocation.</li>
+                <li><strong>Mandatory attributes:</strong> templates enforce required fields before submission.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details>
+            <summary>
+              <span class="sumTitle"><span class="dot warn"></span> Input validation & approval gate</span>
+              <span class="chev"></span>
+            </summary>
+            <div class="detailsBody">
+              <p>
+                All captured data passes a gate: Admin checks accuracy and completeness. If rejected, inspectors
+                receive feedback for correction and resubmission. This prevents bad data from entering valuation.
+              </p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <div class="arrow" aria-hidden="true"></div>
+
+      <!-- PROCESSING -->
+      <section class="column" id="col-processing">
+        <div class="colHead">
+          <div class="colTag"><span class="dot purple"></span><strong>PROCESSING MODULE</strong> Valuation & Analysis</div>
+          <h2 class="colTitle">Valuation engine + Professional review + QA</h2>
+          <p class="colDesc">Engine applies the right method per property type and data availability; valuers can override with justification.</p>
+        </div>
+
+        <div class="content">
+          <div class="card">
+            <div class="cardHead">
+              <h3 class="cardTitle">Valuer Dashboard</h3>
+              <span class="badge">Professional Control</span>
+            </div>
+            <div class="cardBody">
+              <ul>
+                <li>Receive assignments containing <strong>pre-approved</strong> property data.</li>
+                <li>Run valuations individually or in batch mode.</li>
+                <li>Override automated results with justification + evidence.</li>
+                <li>Flag incomplete/non-standard records for correction.</li>
+              </ul>
+              <div class="callout">🧑‍⚖️ Hybrid approach: combines professional judgment + digital automation.</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="cardHead">
+              <h3 class="cardTitle">Valuation Engine</h3>
+              <span class="badge">Automation</span>
+            </div>
+            <div class="cardBody">
+              <details open>
+                <summary>
+                  <span class="sumTitle"><span class="dot purple"></span> Method selection rules</span>
+                  <span class="chev"></span>
+                </summary>
+                <div class="detailsBody">
+                  <ul>
+                    <li><strong>Residential:</strong> Sales Comparison Method (using verified comparables).</li>
+                    <li><strong>Commercial:</strong> Income Approach.</li>
+                    <li><strong>Default:</strong> Cost Method when comparable data is insufficient.</li>
+                  </ul>
+                </div>
+              </details>
+
+              <details>
+                <summary>
+                  <span class="sumTitle"><span class="dot purple"></span> Comparable selection algorithm</span>
+                  <span class="chev"></span>
+                </summary>
+                <div class="detailsBody">
+                  <ul>
+                    <li>Select at least <strong>3 comparables</strong> in same area + time window.</li>
+                    <li>Compare attributes (size, age, condition, location).</li>
+                    <li>Apply weighted adjustments (e.g., regression).</li>
+                    <li>If fewer comparables: expand search radius or time range.</li>
+                  </ul>
+                </div>
+              </details>
+
+              <details>
+                <summary>
+                  <span class="sumTitle"><span class="dot good"></span> Quality assurance</span>
+                  <span class="chev"></span>
+                </summary>
+                <div class="detailsBody">
+                  <ul>
+                    <li>Detect outliers (residual analysis).</li>
+                    <li>Compute error metrics (e.g., RMSE).</li>
+                    <li>Assign confidence scores to each valuation for reliability.</li>
+                  </ul>
+                </div>
+              </details>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="cardHead">
+              <h3 class="cardTitle">Council Dashboard (Processing-side oversight)</h3>
+              <span class="badge">Oversight</span>
+            </div>
+            <div class="cardBody">
+              <ul>
+                <li>Review valuations and generate official valuation rolls.</li>
+                <li>Export valuation roll and reports.</li>
+                <li>Monitor objections and ensure transparency/publication compliance.</li>
+              </ul>
+              <div class="callout">🏛️ Council ensures valuation roll generation & compliance with publication requirements.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="arrow" aria-hidden="true"></div>
+
+      <!-- OUTPUT -->
+      <section class="column" id="col-output">
+        <div class="colHead">
+          <div class="colTag"><span class="dot warn"></span><strong>OUTPUT MODULE</strong> Publication & Owner Interaction</div>
+          <h2 class="colTitle">Publish → Notify → Objections & Appeals</h2>
+          <p class="colDesc">Owners see their valuation details and can submit objections digitally with evidence; audit trail ensures accountability.</p>
+        </div>
+
+        <div class="content">
+          <div class="card">
+            <div class="cardHead">
+              <h3 class="cardTitle">Property Owner Dashboard</h3>
+              <span class="badge">Transparency</span>
+            </div>
+            <div class="cardBody">
+              <ul>
+                <li>Secure login to view valuation details (method used, final value).</li>
+                <li>View GPS-linked records and valuation history.</li>
+                <li>Download available statements/reports.</li>
+                <li>Audit trail records every update (accountability).</li>
+              </ul>
+              <div class="callout">📣 Publication + notifications improve transparency and public trust.</div>
+            </div>
+          </div>
+
+          <details open>
+            <summary>
+              <span class="sumTitle"><span class="dot warn"></span> Objection & appeal mechanism</span>
+              <span class="chev"></span>
+            </summary>
+            <div class="detailsBody">
+              <ul>
+                <li>Owners submit objections digitally with evidence.</li>
+                <li>Council/Admin reviews validity; may assign a valuer for reassessment.</li>
+                <li>Decisions recorded; valuation roll updated accordingly.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details>
+            <summary>
+              <span class="sumTitle"><span class="dot good"></span> Output deliverables</span>
+              <span class="chev"></span>
+            </summary>
+            <div class="detailsBody">
+              <ul>
+                <li><strong>Published valuation roll</strong> (council-controlled).</li>
+                <li><strong>Owner-facing statements</strong> & valuation summaries.</li>
+                <li><strong>Objection log</strong> with decisions + roll updates.</li>
+                <li><strong>Audit logs</strong> for every modification (who/what/when).</li>
+              </ul>
+            </div>
+          </details>
+        </div>
+      </section>
+    </div>
+
+    <footer>
+      Tip: For “Screenshots”, .
+    </footer>
+  </div>
+
+  <script>
+    document.getElementById("goScreenshots").addEventListener("click", () => {
+  window.location.href = "screenshots.html";
+});
+
+    const allDetails = () => Array.from(document.querySelectorAll("details"));
+
+    document.getElementById("expandAll").addEventListener("click", () => {
+      allDetails().forEach(d => d.open = true);
+    });
+
+    document.getElementById("collapseAll").addEventListener("click", () => {
+      allDetails().forEach(d => d.open = false);
+      const keep = document.querySelector("#col-processing details");
+      if (keep) keep.open = true;
+    });
+
+    document.getElementById("printPage").addEventListener("click", () => window.print());
+  </script>
+</body>
+</html>
