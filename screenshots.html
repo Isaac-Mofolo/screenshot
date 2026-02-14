@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>ValueGov-CAMA — Screenshots</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --text:#eaf0ff;
+      --muted:#a9b8e6;
+      --line:rgba(255,255,255,.10);
+      --shadow:0 18px 60px rgba(0,0,0,.45);
+      --radius:18px;
+      --accent:#7aa8ff;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: linear-gradient(180deg, #070b16, var(--bg));
+      color: var(--text);
+    }
+
+    .wrap{
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 28px 18px 60px;
+      text-align: center;
+    }
+
+    header{
+      display:flex;
+      flex-wrap:wrap;
+      gap:14px;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom: 20px;
+    }
+
+    h1{ margin:0; font-size: clamp(20px, 2.2vw, 30px); }
+    .subtitle{ color: var(--muted); font-size:14px; margin-top:6px; }
+
+    .btn{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding:10px 16px;
+      border-radius: 12px;
+      cursor:pointer;
+      text-decoration:none;
+      transition:.2s;
+      font-size:14px;
+    }
+    .btn:hover{
+      background: rgba(122,168,255,.15);
+      border-color: var(--accent);
+    }
+
+    .viewer{
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(10,16,34,.65);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .image-container{
+      position: relative;
+      margin-top: 10px;
+    }
+
+    img{
+      max-width: 100%;
+      max-height: 600px;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      background: #000;
+    }
+
+    .nav{
+      display:flex;
+      justify-content:center;
+      gap:14px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .counter{
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .filename{
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--muted);
+      opacity: 0.8;
+    }
+
+    .empty{
+      margin-top:40px;
+      padding:30px;
+      border:1px dashed var(--line);
+      border-radius:16px;
+      color: var(--muted);
+    }
+
+    @media print{
+      .nav, header .btn { display:none !important; }
+      body{ background:#fff !important; color:#000 !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div style="text-align:left;">
+        <h1>ValueGov-CAMA — System Screenshots</h1>
+        <div class="subtitle">
+          Use Next / Previous to navigate system UI evidence.
+        </div>
+      </div>
+
+      <!-- Back Button -->
+      <a class="btn" href="index.html">⬅ Back to Architecture</a>
+    </header>
+
+    <div class="viewer" id="viewer">
+      <div id="imageContainer" class="image-container">
+        <img id="screenshot" src="" alt="Screenshot">
+      </div>
+
+      <div class="counter" id="counter"></div>
+      <div class="filename" id="filename"></div>
+
+      <div class="nav">
+        <button class="btn" onclick="prevImage()">⬅ Previous</button>
+        <button class="btn" onclick="nextImage()">Next ➡</button>
+        <button class="btn" onclick="window.print()">🖨️ Print / Save PDF</button>
+      </div>
+    </div>
+
+    <div id="emptyMessage" class="empty" style="display:none;">
+      No screenshots found in the uploads folder.<br>
+      Add images inside: <strong>uploads/</strong>
+    </div>
+  </div>
+
+  <script>
+    /*
+      IMPORTANT CONFIG:
+      If Flask → use "/static/uploads/"
+      If plain HTML → use "uploads/"
+    */
+    const folderPath = "uploads/"; 
+    // Example for Flask:
+    // const folderPath = "/static/uploads/";
+
+    // Put your screenshot file names here
+    const screenshots = [
+      "login.png",
+      "admin_dashboard.png",
+      "task.png",
+      "home.png",
+      "route to task.png",
+      "home.png",
+      "valuer.png",
+      "coucil.png",
+      "hee.png"
+    ];
+
+    let currentIndex = 0;
+    const imgElement = document.getElementById("screenshot");
+    const counter = document.getElementById("counter");
+    const filename = document.getElementById("filename");
+    const emptyMessage = document.getElementById("emptyMessage");
+    const viewer = document.getElementById("viewer");
+
+    function showImage(index) {
+      if (screenshots.length === 0) {
+        viewer.style.display = "none";
+        emptyMessage.style.display = "block";
+        return;
+      }
+
+      const file = screenshots[index];
+      imgElement.src = folderPath + file;
+      filename.textContent = file;
+      counter.textContent = `Screenshot ${index + 1} of ${screenshots.length}`;
+    }
+
+    function nextImage() {
+      currentIndex = (currentIndex + 1) % screenshots.length;
+      showImage(currentIndex);
+    }
+
+    function prevImage() {
+      currentIndex = (currentIndex - 1 + screenshots.length) % screenshots.length;
+      showImage(currentIndex);
+    }
+
+    // Keyboard navigation (professional feature)
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight") nextImage();
+      if (e.key === "ArrowLeft") prevImage();
+    });
+
+    // Initial load
+    if (screenshots.length > 0) {
+      showImage(currentIndex);
+    } else {
+      viewer.style.display = "none";
+      emptyMessage.style.display = "block";
+    }
+  </script>
+</body>
+</html>
